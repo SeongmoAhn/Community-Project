@@ -1,17 +1,24 @@
 package com.seongmo.community;
 
+import com.seongmo.community.member.Member;
+import com.seongmo.community.member.MemberService;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        MemberService memberService = new MemberService();
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+        Member seongmo = memberService.save("asm0619@naver.com", "123123123", "안성모");
+        System.out.println(seongmo.getId() + ", " + seongmo.getEmail() + ", " + seongmo.getNickname());
+
+        Member testman1 = memberService.save("testman1@test.com", "sdfsdfsdf", "테스트맨1");
+        System.out.println(testman1.getId() + ", " + testman1.getEmail() + ", " + testman1.getNickname());
+
+        try {
+            Member testman2 = memberService.save("testman1@test.com", "098098098", "테스트맨1-1");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }

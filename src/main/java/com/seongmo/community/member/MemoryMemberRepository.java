@@ -3,7 +3,7 @@ package com.seongmo.community.member;
 import java.util.HashMap;
 
 public class MemoryMemberRepository implements MemberRepository{
-    private HashMap<Long, Member> hashMap = new HashMap<>();
+    private final HashMap<Long, Member> hashMap = new HashMap<>();
 
     @Override
     public Member save(Member request) {

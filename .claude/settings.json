@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit",
+      "Write"
+    ],
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(./gradlew test *)"
+    ]
+  }
+}

@@ -89,19 +89,3 @@
 | v1.5~ | (선택) OpenAI 유해 콘텐츠 감지, RAG | 포트폴리오 확장 |
 
 제외(읽기만): JSP, 타임리프, WAR·외장 톰캣, Elastic Beanstalk, MongoDB
-
-## 현재 진행 상황
-
-> 학습자가 직접 업데이트하는 섹션
-
-- 현재 버전: **v0.1**
-- 현재 브랜치: `feat/member-join`
-- v0.1 브랜치 계획: `feat/member-join` → `feat/post-create` → `refactor/constructor-injection` → `v0.1` 태그
-- v0.1에서는 **일부러 서비스 안에서 `new`로 저장소를 생성**해서 불편함을 먼저 겪는다
-
-### 회원가입 요구사항
-- 회원 정보: id, 이메일, 비밀번호, 닉네임
-- id는 가입 순서대로 자동 부여
-- 같은 이메일로 중복 가입 불가 → 예외
-- 저장은 `HashMap`, `Main`에서 가입·중복 가입 시도 결과 출력
-- 클래스: `Member`, `MemberRepository`, `MemoryMemberRepository`, `MemberService` (`member` 패키지)

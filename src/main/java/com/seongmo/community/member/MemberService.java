@@ -2,7 +2,11 @@ package com.seongmo.community.member;
 
 public class MemberService {
     private Long id = 0L;
-    private MemberRepository memberRepository = new MemoryMemberRepository();
+    private final MemberRepository memberRepository;
+
+    public MemberService(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
 
     public Member save(String email, String password, String nickname) {
         if (memberRepository.findByEmail(email)) {

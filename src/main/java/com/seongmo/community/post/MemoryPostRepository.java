@@ -3,7 +3,7 @@ package com.seongmo.community.post;
 import java.util.HashMap;
 
 public class MemoryPostRepository implements PostRepository {
-    private HashMap<Long, Post> hashMap = new HashMap<>();
+    private final HashMap<Long, Post> hashMap = new HashMap<>();
 
     @Override
     public Post save(Post request) {

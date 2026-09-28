@@ -1,0 +1,19 @@
+### 회원가입 (안성모)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "asm0619@naver.com",
+  "password": "123123123",
+  "nickname": "안성모"
+}
+
+### 회원가입 (테스트맨1)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "testman1@test.test",
+  "password": "sdfsdfsdf",
+  "nickname": "테스트맨1"
+}

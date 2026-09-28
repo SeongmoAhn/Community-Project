@@ -1,10 +1,12 @@
 package com.seongmo.community.member;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class Member {
     private final Long id;
     private final String email;

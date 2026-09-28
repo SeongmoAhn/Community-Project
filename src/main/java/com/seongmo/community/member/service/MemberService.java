@@ -15,7 +15,7 @@ public class MemberService {
     private Long id = 0L;
     private final MemberRepository memberRepository;
 
-    public MemberSignupResponse save(MemberSignupRequest request) {
+    public MemberSignupResponse signup(MemberSignupRequest request) {
         if (memberRepository.findByEmail(request.getEmail())) {
             log.error("회원가입 실패");
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");

@@ -3,7 +3,7 @@
 ## 목차
 - [v0.1 - 순수 자바 콘솔 앱](#v01---순수-자바-콘솔-앱)
 - [v0.2 - 스프링 부트 전환](#v02---스프링-부트-전환)
-
+- [v0.3 - REST API, 서비스 계층, DTO](#v03---rest-api-서비스-계층-dto)
 ## v0.1 - 순수 자바 콘솔 앱
 
 ### 문제
@@ -48,3 +48,29 @@
 - 클린 빌드 + `bootRun`으로 실행 확인, 회원가입/게시글 작성 결과가 이전과 동일하게 출력됨
 - 서비스 코드에서 더 이상 반복되는 조립 코드(`AppConfig`)나 로깅 코드가 없어짐 — 새 도메인이 추가돼도 애노테이션만 붙이면 스프링과 AOP가 알아서 처리함
 - 롬복이 모든 보일러플레이트를 대체해주진 않는다는 것(커스텀 로직이 있는 `Post` 생성자)과, AOP의 pointcut 범위는 의도한 만큼 정확히 좁혀야 한다는 것을 직접 겪어봄
+
+## v0.3 - REST API, 서비스 계층, DTO
+
+### 문제
+- 콘솔 앱이라 웹에서 쓸 수 없었음
+- 엔티티(`Member`, `Post`)를 그대로 요청/응답에 쓰면, 클라이언트가 몰라도 될 `id`까지 보내야 하고 `password` 같은 민감한 값이 응답에 노출됨
+- v0.1부터 미뤄뒀던 "존재하지 않는 memberId로 게시글이 만들어지는 문제"도 해결 안 된 상태였음
+
+### 원인
+- 엔티티는 내부 도메인 표현이고 API 요청/응답 모양(계약)은 별개인데, 이 둘을 분리하지 않고 엔티티를 그대로 썼기 때문
+- `PostService`가 `MemberRepository`에 접근할 수단이 없어서 회원 존재 여부를 검증할 방법이 없었음
+
+### 해결
+- `spring-boot-starter-web` 추가
+- `member`, `post` 패키지를 각각 `controller`/`service`/`repository`/`dto`로 계층 분리 (도메인 우선 구조 유지)
+- 요청 DTO(`MemberSignupRequest`, `PostCreateRequest`), 응답 DTO(`MemberSignupResponse`, `PostResponse`) 도입 — 엔티티 직접 노출 제거
+- **요청 DTO는 `@NoArgsConstructor` + `@Setter`, 응답 DTO는 `@Builder`**로 다르게 구성 — Jackson이 JSON을 객체로 만드는 방식(기본 생성자로 빈 객체 생성 후 값 채움)과 우리가 코드로 직접 객체를 만드는 방식이 다르다는 걸 실제 500 에러(`Cannot construct instance... no Creators`)를 겪고 확인함
+- `POST /members`, `POST /posts` 엔드포인트 구현
+- `PostService`에 `MemberRepository`를 주입받아 `memberId` 존재 여부 검증, **저장 전에 검증**하도록 순서 정리 (검증 전에 저장부터 하면 잘못된 데이터가 저장소에 남는 문제를 직접 겪고 수정)
+- `Main`의 콘솔 데모 코드 제거, IntelliJ HTTP Client(`http/*.http`)로 테스트하는 방식으로 전환
+- 엔티티 → DTO 변환은 서비스 계층에 두기로 결정 (컨트롤러로 옮기는 대안도 검토했으나, 지금은 재사용 필요성이 없어 YAGNI 원칙에 따라 보류)
+
+### 결과
+- 회원가입 시 `password` 없이 `id`/`email`/`nickname`만 응답으로 내려오는 것 확인
+- 게시글 작성 시 작성자 닉네임까지 포함된 응답 확인, 존재하지 않는 `memberId`로는 게시글이 저장되지 않는 것 확인
+- 중복 이메일 가입 시도 시 `500 Internal Server Error`로 뭉뚱그려 응답되는 문제를 재확인 — 적절한 상태 코드와 에러 메시지 처리는 v0.10(Bean Validation, 전역 예외 처리)에서 다룰 예정

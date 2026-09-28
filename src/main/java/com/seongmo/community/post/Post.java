@@ -1,10 +1,12 @@
 package com.seongmo.community.post;
 
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
 public class Post {
     private final Long id;
     private final String title;
@@ -12,13 +14,4 @@ public class Post {
     private final Long memberId;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public Post(Long id, String title, String content, Long memberId, LocalDateTime createdAt) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.memberId = memberId;
-        this.createdAt = createdAt;
-        this.updatedAt = createdAt;
-    }
 }

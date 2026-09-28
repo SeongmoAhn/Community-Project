@@ -17,6 +17,6 @@ public class MemberController {
 
     @PostMapping
     public MemberSignupResponse signup(@RequestBody MemberSignupRequest request) {
-        return memberService.save(request);
+        return memberService.signup(request);
     }
 }

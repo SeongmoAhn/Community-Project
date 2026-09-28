@@ -25,4 +25,14 @@ public class MemoryMemberRepository implements MemberRepository{
 
         return false;
     }
+
+    @Override
+    public String findNicknameById(Long id) {
+        for (Member m : hashMap.values()) {
+            if (m.getId().equals(id)) {
+                return m.getNickname();
+            }
+        }
+        return null;
+    }
 }

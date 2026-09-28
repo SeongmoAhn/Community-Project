@@ -1,6 +1,8 @@
-package com.seongmo.community.post;
+package com.seongmo.community.post.repository;
 
 import java.util.HashMap;
+
+import com.seongmo.community.post.Post;
 import org.springframework.stereotype.Repository;
 
 @Repository

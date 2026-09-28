@@ -5,4 +5,5 @@ import com.seongmo.community.member.Member;
 public interface MemberRepository {
     public Member save(Member request);
     public boolean findByEmail(String email);
+    public String findNicknameById(Long id);
 }

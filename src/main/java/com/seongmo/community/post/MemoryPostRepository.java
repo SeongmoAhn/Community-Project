@@ -1,7 +1,9 @@
 package com.seongmo.community.post;
 
 import java.util.HashMap;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class MemoryPostRepository implements PostRepository {
     private final HashMap<Long, Post> hashMap = new HashMap<>();
 

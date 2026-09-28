@@ -1,0 +1,29 @@
+### 회원가입 (안성모)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "asm0619@naver.com",
+  "password": "123123123",
+  "nickname": "안성모"
+}
+
+### 글 작성 (안성모)
+POST http://localhost:8080/posts
+Content-Type: application/json
+
+{
+  "title": "성모글 제목",
+  "content": "성모글 본문",
+  "memberId": "1"
+}
+
+### 글 작성 (없는 작성자)
+POST http://localhost:8080/posts
+Content-Type: application/json
+
+{
+  "title": "성모글 제목",
+  "content": "성모글 본문",
+  "memberId": "10"
+}

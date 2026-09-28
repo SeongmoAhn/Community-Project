@@ -1,7 +1,9 @@
 package com.seongmo.community.member;
 
 import java.util.HashMap;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class MemoryMemberRepository implements MemberRepository{
     private final HashMap<Long, Member> hashMap = new HashMap<>();
 

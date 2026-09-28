@@ -1,5 +1,8 @@
 package com.seongmo.community.member;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class MemberService {
     private Long id = 0L;
     private final MemberRepository memberRepository;

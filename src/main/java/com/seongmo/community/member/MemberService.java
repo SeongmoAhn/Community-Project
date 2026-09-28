@@ -1,15 +1,13 @@
 package com.seongmo.community.member;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class MemberService {
     private Long id = 0L;
     private final MemberRepository memberRepository;
-
-    public MemberService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
 
     public Member save(String email, String password, String nickname) {
         if (memberRepository.findByEmail(email)) {

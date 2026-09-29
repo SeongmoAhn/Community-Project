@@ -1,22 +1,24 @@
 package com.seongmo.community.post;
 
-import lombok.Builder;
-import lombok.Getter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
 @Table(name = "posts")
 public class Post {
     @Id
-    private final Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private final String title;
-    private final String content;
-    private final Long memberId;
-    private final LocalDateTime createdAt;
+    private String title;
+    private String content;
+    private Long memberId;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,20 +1,20 @@
 package com.seongmo.community.member;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
+@Entity
 @Table(name = "members")
 public class Member {
     @Id
-    private final Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private final String email;
-    private final String password;
-    private final String nickname;
+    private String email;
+    private String password;
+    private String nickname;
 }

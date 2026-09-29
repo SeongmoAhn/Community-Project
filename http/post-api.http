@@ -13,8 +13,8 @@ POST http://localhost:8080/posts
 Content-Type: application/json
 
 {
-  "title": "성모글 제목",
-  "content": "성모글 본문",
+  "title": "성모글 제목1",
+  "content": "성모글 본문1",
   "memberId": 1
 }
 
@@ -23,8 +23,8 @@ POST http://localhost:8080/posts
 Content-Type: application/json
 
 {
-  "title": "테스트맨1글 제목2",
-  "content": "테스트맨1글 본문2",
+  "title": "테스트맨1글 제목1",
+  "content": "테스트맨1글 본문1",
   "memberId": 2
 }
 

@@ -15,7 +15,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     public MemberSignupResponse signup(MemberSignupRequest request) {
-        if (memberRepository.findByEmail(request.getEmail())) {
+        if (memberRepository.existsByEmail(request.getEmail())) {
             log.error("회원가입 실패");
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
@@ -28,12 +28,10 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
 
-        MemberSignupResponse response = MemberSignupResponse.builder()
+        return MemberSignupResponse.builder()
                 .id(saved.getId())
                 .email(saved.getEmail())
                 .nickname(saved.getNickname())
                 .build();
-
-        return response;
     }
 }

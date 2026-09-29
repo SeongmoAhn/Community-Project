@@ -15,7 +15,17 @@ Content-Type: application/json
 {
   "title": "성모글 제목",
   "content": "성모글 본문",
-  "memberId": "1"
+  "memberId": 1
+}
+
+### 글 작성 (테스트맨1)
+POST http://localhost:8080/posts
+Content-Type: application/json
+
+{
+  "title": "테스트맨1글 제목",
+  "content": "테스트맨1글 본문",
+  "memberId": 2
 }
 
 ### 글 작성 (없는 작성자)
@@ -25,5 +35,5 @@ Content-Type: application/json
 {
   "title": "성모글 제목",
   "content": "성모글 본문",
-  "memberId": "10"
+  "memberId": 10
 }

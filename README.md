@@ -6,6 +6,7 @@
 - [v0.3 - REST API, 서비스 계층, DTO](#v03---rest-api-서비스-계층-dto)
 - [v0.4 - JDBC + MySQL](#v04---jdbc--mysql)
 - [v0.5 - Spring Data JDBC, 커넥션 풀](#v05---spring-data-jdbc-커넥션-풀)
+- [v0.6 - JPA, 영속성 컨텍스트](#v06---jpa-영속성-컨텍스트)
 
 ## v0.1 - 순수 자바 콘솔 앱
 
@@ -123,3 +124,26 @@
 - `Connection`/`PreparedStatement`/`ResultSet` 관련 코드가 리포지토리에서 완전히 사라지고 인터페이스 선언만 남음
 - HikariCP 로그로 실제 커넥션 풀이 적용된 것 확인
 - 회원가입/게시글 작성/중복 이메일 검증 모두 정상 동작 확인
+
+## v0.6 - JPA, 영속성 컨텍스트
+
+### 문제
+- Spring Data JDBC로도 CRUD는 됐지만, 매 쿼리마다 엔티티를 새로 조회/저장하는 방식이라 객체를 관계형 데이터처럼 계속 변환해줘야 했음
+
+### 원인
+- Spring Data JDBC는 "영속성 컨텍스트"(객체를 계속 추적하고 관리하는 1차 캐시 같은 공간) 없이, 매번 DB와 직접 값을 주고받는 방식이라 객체 상태를 계속 테이블 구조에 맞춰 변환해야 함
+
+### 해결
+- `spring-boot-starter-data-jpa` 추가 (Hibernate 포함)
+- `Member`, `Post`를 JPA 엔티티로 전환 (`@Entity`, `@Table`, `@Id`, `@GeneratedValue(IDENTITY)`)
+- JPA 엔티티는 완전한 불변 객체로 만들 수 없다는 제약을 직접 겪음 — Hibernate가 리플렉션으로 빈 객체를 만든 뒤 필드를 채우는 방식이라 기본 생성자가 필요함. `final` 필드 제거, `@NoArgsConstructor(access = PROTECTED)`로 타협 (애플리케이션 코드에서 `new`로 빈 엔티티를 만드는 건 막되 JPA는 접근 가능하게)
+- `MemberRepository`, `PostRepository`를 `CrudRepository`에서 `JpaRepository`로 전환
+- **게시글 수정(`PATCH /posts/{id}`) 기능으로 영속성 컨텍스트의 변경 감지(더티 체킹) 체험**: `@Transactional` 안에서 조회한 엔티티의 필드만 직접 바꾸고, `save()`를 한 번도 호출하지 않아도 트랜잭션 커밋 시점에 자동으로 UPDATE되는 것을 확인
+- 처음엔 `PUT`으로 시작했다가 "일부 필드만 수정"이 필요하다는 걸 깨닫고 `PATCH`로 전환 (PUT은 전체 교체, PATCH는 부분 수정이라는 의미 차이 정리)
+- 과정에서 겪은 버그들: 빈 필드로 PATCH 시 NOT NULL 제약 위반, 변경 없는 요청에도 `updatedAt`이 갱신되는 문제 — 둘 다 직접 에러 재현 후 수정
+- (곁가지) MyBatis로 raw SQL을 직접 관리하는 방식도 비교 체험 (`spike/mybatis`, main에는 merge 안 함)
+
+### 결과
+- 회원가입/게시글 작성/수정 API 정상 동작 확인
+- `save()` 호출 없이 DB에 UPDATE가 반영되는 것을 직접 확인해 더티 체킹의 동작 원리를 체감
+- JSON 바인딩용 DTO에 불필요하게 붙였던 `@Setter`, `@NoArgsConstructor`를 "실제로 필요한지" 하나씩 검증하며 제거 — 패턴을 무조건 따라 붙이지 않고 이유를 확인하는 습관 강화

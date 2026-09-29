@@ -23,8 +23,8 @@ POST http://localhost:8080/posts
 Content-Type: application/json
 
 {
-  "title": "테스트맨1글 제목",
-  "content": "테스트맨1글 본문",
+  "title": "테스트맨1글 제목2",
+  "content": "테스트맨1글 본문2",
   "memberId": 2
 }
 

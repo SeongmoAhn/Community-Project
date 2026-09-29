@@ -1,9 +1,8 @@
 package com.seongmo.community.member.repository;
 
 import com.seongmo.community.member.Member;
+import org.springframework.data.repository.CrudRepository;
 
-public interface MemberRepository {
-    public Member save(Member request);
-    public boolean findByEmail(String email);
-    public String findNicknameById(Long id);
+public interface MemberRepository extends CrudRepository<Member, Long> {
+    boolean existsByEmail(String email);
 }

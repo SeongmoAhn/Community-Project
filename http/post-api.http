@@ -37,3 +37,13 @@ Content-Type: application/json
   "content": "성모글 본문",
   "memberId": 10
 }
+
+### 글 수정 (테스트맨1)
+PATCH http://localhost:8080/posts/2
+Content-Type: application/json
+
+{
+  "title": "테스트맨1글 제목1 수정12",
+  "content": "테스트맨1글 본문1 수정12"
+}
+

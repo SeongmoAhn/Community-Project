@@ -5,10 +5,13 @@ import com.seongmo.community.member.repository.MemberRepository;
 import com.seongmo.community.post.Post;
 import com.seongmo.community.post.dto.PostCreateRequest;
 import com.seongmo.community.post.dto.PostResponse;
+import com.seongmo.community.post.dto.PostUpdateRequest;
 import com.seongmo.community.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 
 @Service
@@ -40,6 +43,38 @@ public class PostService {
                 .memberNickname(member.getNickname())
                 .createdAt(saved.getCreatedAt())
                 .updatedAt(saved.getUpdatedAt())
+                .build();
+    }
+
+    @Transactional
+    public PostResponse update(Long id, PostUpdateRequest request) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 postId입니다."));
+
+        boolean changed = false;
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
+            changed = true;
+        }
+        if (request.getContent() != null) {
+            post.setContent(request.getContent());
+            changed = true;
+        }
+        if (changed) {
+            post.setUpdatedAt(LocalDateTime.now());
+        }
+
+        Member member = memberRepository.findById(post.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다."));
+
+        return PostResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .memberId(post.getMemberId())
+                .memberNickname(member.getNickname())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
                 .build();
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class MemberService {
-    private Long id = 0L;
     private final MemberRepository memberRepository;
 
     public MemberSignupResponse signup(MemberSignupRequest request) {
@@ -22,7 +21,6 @@ public class MemberService {
         }
 
         Member member = Member.builder()
-                .id(++id)
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .nickname(request.getNickname())

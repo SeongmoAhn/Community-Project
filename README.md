@@ -5,6 +5,7 @@
 - [v0.2 - 스프링 부트 전환](#v02---스프링-부트-전환)
 - [v0.3 - REST API, 서비스 계층, DTO](#v03---rest-api-서비스-계층-dto)
 - [v0.4 - JDBC + MySQL](#v04---jdbc--mysql)
+- [v0.5 - Spring Data JDBC, 커넥션 풀](#v05---spring-data-jdbc-커넥션-풀)
 
 ## v0.1 - 순수 자바 콘솔 앱
 
@@ -100,3 +101,25 @@
 - 회원가입/게시글 작성 API로 데이터 생성 확인, DB에서 실제 저장 확인
 - 서버를 재시작한 뒤 같은 이메일로 재가입을 시도하면 "이미 존재하는 이메일입니다" 응답이 오는 것으로 데이터가 영구 저장됨을 검증
 - 반복되는 `Connection`/`PreparedStatement` 보일러플레이트와 매번 새 연결을 만드는 비효율을 직접 겪음 — v0.5(Spring Data JDBC, 커넥션 풀)의 필요성을 체감
+- 
+## v0.5 - Spring Data JDBC, 커넥션 풀
+
+### 문제
+- raw JDBC로 직접 구현하면서 Connection/PreparedStatement/ResultSet을 다루는 반복 코드가 많았음
+- 매번 `DriverManager.getConnection()`으로 새 커넥션을 만드는 비효율
+
+### 원인
+- JDBC API를 직접 쓰면 CRUD 메서드마다 연결 생성, try-with-resources, 예외 처리가 반복됨
+- 커넥션을 재사용하는 장치(풀)가 없었음
+
+### 해결
+- `spring-boot-starter-data-jdbc` 추가 — HikariCP 커넥션 풀이 기본으로 포함됨
+- `Member`, `Post`에 `@Id` 적용, 실제 테이블명(`members`, `posts`)이 기본 네이밍 규칙과 달라 `@Table(name = "...")`로 명시
+- `JdbcMemberRepository`/`JdbcPostRepository`(raw JDBC 구현체) 삭제, `MemberRepository`/`PostRepository`가 `CrudRepository<T, Long>`를 상속하는 인터페이스만으로 기본 CRUD를 자동 제공받음
+- `existsByEmail`처럼 메서드 이름 규칙으로 쿼리 자동 생성
+- `findNicknameById`처럼 특정 컬럼만 반환하는 커스텀 쿼리는 이름 규칙으로 표현이 안 된다는 것을 직접 겪음(`Couldn't find PersistentEntity for type class java.lang.String`) → `CrudRepository`가 기본 제공하는 `findById`(`Optional<Member>`)로 대체하고 `orElseThrow`로 처리
+
+### 결과
+- `Connection`/`PreparedStatement`/`ResultSet` 관련 코드가 리포지토리에서 완전히 사라지고 인터페이스 선언만 남음
+- HikariCP 로그로 실제 커넥션 풀이 적용된 것 확인
+- 회원가입/게시글 작성/중복 이메일 검증 모두 정상 동작 확인

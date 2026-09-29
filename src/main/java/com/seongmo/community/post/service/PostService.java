@@ -1,45 +1,47 @@
 package com.seongmo.community.post.service;
 
 import com.seongmo.community.member.Member;
-import com.seongmo.community.member.repository.MemberRepository;
-import com.seongmo.community.post.Post;
+import com.seongmo.community.member.mapper.MemberMapper;
 import com.seongmo.community.post.dto.PostCreateRequest;
 import com.seongmo.community.post.dto.PostResponse;
-import com.seongmo.community.post.repository.PostRepository;
+import com.seongmo.community.post.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PostService {
-    private final PostRepository postRepository;
-    private final MemberRepository memberRepository;
+    private final PostMapper postMapper;
+    private final MemberMapper memberMapper;
 
     public PostResponse create(PostCreateRequest request) {
-        Member member = memberRepository.findById(request.getMemberId())
+        Member member = memberMapper.findById(request.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 memberId입니다."));
 
-        Post post = Post.builder()
+        Map<String, Object> params = new HashMap<>();
+        params.put("title", request.getTitle());
+        params.put("content", request.getContent());
+        params.put("memberId", request.getMemberId());
+        params.put("createdAt", LocalDateTime.now());
+        params.put("updatedAt", LocalDateTime.now());
+
+        postMapper.save(params);
+
+        Long generatedId = ((Number) params.get("id")).longValue();
+
+        return PostResponse.builder()
+                .id(generatedId)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .memberId(request.getMemberId())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        Post saved = postRepository.save(post);
-
-        return PostResponse.builder()
-                .id(saved.getId())
-                .title(saved.getTitle())
-                .content(saved.getContent())
-                .memberId(saved.getMemberId())
                 .memberNickname(member.getNickname())
-                .createdAt(saved.getCreatedAt())
-                .updatedAt(saved.getUpdatedAt())
+                .createdAt((LocalDateTime) params.get("createdAt"))
+                .updatedAt((LocalDateTime) params.get("updatedAt"))
                 .build();
     }
 }

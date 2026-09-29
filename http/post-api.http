@@ -15,7 +15,7 @@ Content-Type: application/json
 {
   "title": "성모글 제목",
   "content": "성모글 본문",
-  "memberId": 1
+  "memberId": 4
 }
 
 ### 글 작성 (테스트맨1)
@@ -25,7 +25,7 @@ Content-Type: application/json
 {
   "title": "테스트맨1글 제목2",
   "content": "테스트맨1글 본문2",
-  "memberId": 2
+  "memberId": 5
 }
 
 ### 글 작성 (없는 작성자)

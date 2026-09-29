@@ -28,6 +28,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.aspectj:aspectjweaver'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.1.0'
 }
 
 test {

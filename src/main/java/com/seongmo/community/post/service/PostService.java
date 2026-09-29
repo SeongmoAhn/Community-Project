@@ -1,6 +1,5 @@
 package com.seongmo.community.post.service;
 
-import com.seongmo.community.member.Member;
 import com.seongmo.community.member.repository.MemberRepository;
 import com.seongmo.community.post.Post;
 import com.seongmo.community.post.dto.PostCreateRequest;
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class PostService {
-    private Long id = 0L;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
@@ -26,7 +24,6 @@ public class PostService {
         }
 
         Post post = Post.builder()
-                .id(++id)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .memberId(request.getMemberId())
@@ -36,7 +33,7 @@ public class PostService {
 
         Post saved = postRepository.save(post);
 
-        PostResponse response = PostResponse.builder()
+        return PostResponse.builder()
                 .id(saved.getId())
                 .title(saved.getTitle())
                 .content(saved.getContent())
@@ -45,7 +42,5 @@ public class PostService {
                 .createdAt(saved.getCreatedAt())
                 .updatedAt(saved.getUpdatedAt())
                 .build();
-
-        return response;
     }
 }

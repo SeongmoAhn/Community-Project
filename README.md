@@ -4,6 +4,8 @@
 - [v0.1 - 순수 자바 콘솔 앱](#v01---순수-자바-콘솔-앱)
 - [v0.2 - 스프링 부트 전환](#v02---스프링-부트-전환)
 - [v0.3 - REST API, 서비스 계층, DTO](#v03---rest-api-서비스-계층-dto)
+- [v0.4 - JDBC + MySQL](#v04---jdbc--mysql)
+
 ## v0.1 - 순수 자바 콘솔 앱
 
 ### 문제
@@ -74,3 +76,27 @@
 - 회원가입 시 `password` 없이 `id`/`email`/`nickname`만 응답으로 내려오는 것 확인
 - 게시글 작성 시 작성자 닉네임까지 포함된 응답 확인, 존재하지 않는 `memberId`로는 게시글이 저장되지 않는 것 확인
 - 중복 이메일 가입 시도 시 `500 Internal Server Error`로 뭉뚱그려 응답되는 문제를 재확인 — 적절한 상태 코드와 에러 메시지 처리는 v0.10(Bean Validation, 전역 예외 처리)에서 다룰 예정
+
+## v0.4 - JDBC + MySQL
+
+### 문제
+- 서버를 재시작하면 `HashMap`에 저장해뒀던 회원/게시글 데이터가 전부 사라짐
+
+### 원인
+- 저장소가 인메모리(`HashMap`)였어서 JVM이 꺼지면 데이터도 함께 사라지는 구조였음
+
+### 해결
+- 로컬 도커 MySQL에 `community` DB 생성, `members`(`id` AUTO_INCREMENT, `email` UNIQUE), `posts`(`content`는 `TEXT`, `member_id`는 `members(id)`를 참조하는 FOREIGN KEY) 테이블 설계
+- `mysql-connector-j` 드라이버 추가(`runtimeOnly`), `application.yml`에 datasource 접속 정보 설정
+- `MemoryMemberRepository`, `MemoryPostRepository`를 삭제하고 `JdbcMemberRepository`, `JdbcPostRepository`로 교체 — raw JDBC(`DriverManager`, `PreparedStatement`, `ResultSet`)로 직접 구현
+- **일부러 커넥션 풀 없이** 매 호출마다 `DriverManager.getConnection()`으로 새로 연결하는 방식으로 구현 (v0.5에서 Spring Data JDBC + 커넥션 풀로 해결할 문제를 먼저 체감하기 위해)
+- `id` 발급 책임을 애플리케이션(수동 카운터)에서 DB(`AUTO_INCREMENT`)로 이관
+- INSERT 시 `Statement.RETURN_GENERATED_KEYS` + `getGeneratedKeys()`로 생성된 `id`를 받아오되, 이 `ResultSet`엔 **생성된 키 컬럼만** 들어있고 나머지 컬럼은 없다는 걸 직접 겪고 확인 — 나머지 필드는 저장 전 값을 그대로 사용
+- `Connection`/`PreparedStatement`/`ResultSet`은 전부 try-with-resources(필요시 중첩)로 자동 close
+- `LocalDateTime`은 `setObject`/`getObject`로 바인딩·조회
+- DB 컬럼은 스네이크 케이스(`member_id`, `created_at`), 자바 필드는 카멜케이스(`memberId`, `createdAt`) — 지금은 자동 매핑이 없어서 쿼리 작성/조회 시 직접 이어줘야 한다는 것 확인
+
+### 결과
+- 회원가입/게시글 작성 API로 데이터 생성 확인, DB에서 실제 저장 확인
+- 서버를 재시작한 뒤 같은 이메일로 재가입을 시도하면 "이미 존재하는 이메일입니다" 응답이 오는 것으로 데이터가 영구 저장됨을 검증
+- 반복되는 `Connection`/`PreparedStatement` 보일러플레이트와 매번 새 연결을 만드는 비효율을 직접 겪음 — v0.5(Spring Data JDBC, 커넥션 풀)의 필요성을 체감

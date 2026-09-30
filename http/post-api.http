@@ -3,9 +3,9 @@ POST http://localhost:8080/members
 Content-Type: application/json
 
 {
-  "email": "asm0619@naver.com",
+  "email": "asm0619_1@naver.com",
   "password": "123123123",
-  "nickname": "안성모"
+  "nickname": "안성모_1"
 }
 
 ### 글 작성 (안성모)
@@ -13,9 +13,9 @@ POST http://localhost:8080/posts
 Content-Type: application/json
 
 {
-  "title": "성모글 제목1",
-  "content": "성모글 본문1",
-  "memberId": 1
+  "title": "성모_1글 제목1",
+  "content": "성모_1글 본문1",
+  "memberId": 3
 }
 
 ### 글 작성 (테스트맨1)
@@ -38,12 +38,12 @@ Content-Type: application/json
   "memberId": 10
 }
 
-### 글 수정 (테스트맨1)
-PATCH http://localhost:8080/posts/2
+### 글 수정 (성모_1)
+PATCH http://localhost:8080/posts/4
 Content-Type: application/json
 
 {
-  "title": "테스트맨1글 제목1 수정12",
-  "content": "테스트맨1글 본문1 수정12"
+  "title": "성모_1글 제목1 수정1",
+  "content": "성모_1글 본문1 수정1"
 }
 

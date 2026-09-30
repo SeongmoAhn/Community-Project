@@ -1,5 +1,6 @@
 package com.seongmo.community.post;
 
+import com.seongmo.community.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,11 @@ public class Post {
 
     private String title;
     private String content;
-    private Long memberId;
+
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

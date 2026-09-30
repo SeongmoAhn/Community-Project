@@ -28,7 +28,7 @@ public class PostService {
         Post post = Post.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
-                .memberId(request.getMemberId())
+                .member(member)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -39,7 +39,7 @@ public class PostService {
                 .id(saved.getId())
                 .title(saved.getTitle())
                 .content(saved.getContent())
-                .memberId(saved.getMemberId())
+                .memberId(member.getId())
                 .memberNickname(member.getNickname())
                 .createdAt(saved.getCreatedAt())
                 .updatedAt(saved.getUpdatedAt())
@@ -64,15 +64,12 @@ public class PostService {
             post.setUpdatedAt(LocalDateTime.now());
         }
 
-        Member member = memberRepository.findById(post.getMemberId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId입니다."));
-
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .memberId(post.getMemberId())
-                .memberNickname(member.getNickname())
+                .memberId(post.getMember().getId())
+                .memberNickname(post.getMember().getNickname())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

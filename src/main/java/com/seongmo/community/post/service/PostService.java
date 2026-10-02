@@ -77,7 +77,7 @@ public class PostService {
     }
 
     public List<PostResponse> findAll() {
-        List<Post> posts = postRepository.findAll();
+        List<Post> posts = postRepository.findAllWithMember();
 
         return posts.stream().map(post ->
                 PostResponse.builder()

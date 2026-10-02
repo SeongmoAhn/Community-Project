@@ -1,5 +1,6 @@
 package com.seongmo.community.post.service;
 
+import com.seongmo.community.comment.repository.CommentRepository;
 import com.seongmo.community.member.Member;
 import com.seongmo.community.member.repository.MemberRepository;
 import com.seongmo.community.post.Post;
@@ -21,6 +22,7 @@ import java.util.List;
 public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
 
     public PostResponse create(PostCreateRequest request) {
         Member member = memberRepository.findById(request.getMemberId())
@@ -89,5 +91,15 @@ public class PostService {
                         .createdAt(post.getCreatedAt())
                         .updatedAt(post.getUpdatedAt())
                         .build()).toList();
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID입니다."));
+
+        commentRepository.deleteByPostId(post.getId());
+
+        postRepository.delete(post);
     }
 }

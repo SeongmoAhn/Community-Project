@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -73,5 +74,20 @@ public class PostService {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
+    }
+
+    public List<PostResponse> findAll() {
+        List<Post> posts = postRepository.findAll();
+
+        return posts.stream().map(post ->
+                PostResponse.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .memberId(post.getMember().getId())
+                        .memberNickname(post.getMember().getNickname())
+                        .createdAt(post.getCreatedAt())
+                        .updatedAt(post.getUpdatedAt())
+                        .build()).toList();
     }
 }

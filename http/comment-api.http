@@ -1,0 +1,56 @@
+### 회원가입 (성모)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "asm0619@naver.com",
+  "password": "123123123",
+  "nickname": "안성모"
+}
+
+### 회원가입 (테스트맨1)
+POST http://localhost:8080/members
+Content-Type: application/json
+
+{
+  "email": "testman1@test.com",
+  "password": "sdfsdfsdf",
+  "nickname": "테스트맨1"
+}
+
+### 게시글 작성
+POST http://localhost:8080/posts
+Content-Type: application/json
+
+{
+  "title": "성모 제목",
+  "content": "성모 본문",
+  "memberId": 1
+}
+
+### 댓글 작성
+POST http://localhost:8080/posts/1/comments
+Content-Type: application/json
+
+{
+  "content": "첫 댓글입니다",
+  "memberId": 1
+}
+
+### 댓글 수정 (본인 - 성공해야 함)
+PATCH http://localhost:8080/comments/1
+Content-Type: application/json
+
+{
+  "content": "수정된 댓글입니다",
+  "memberId": 1
+}
+
+### 댓글 수정 (다른 사람 - 권한 체크에 막혀야 함)
+PATCH http://localhost:8080/comments/1
+Content-Type: application/json
+
+{
+  "content": "남의 댓글 수정 시도",
+  "memberId": 2
+}

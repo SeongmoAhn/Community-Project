@@ -7,6 +7,7 @@
 - [v0.4 - JDBC + MySQL](#v04---jdbc--mysql)
 - [v0.5 - Spring Data JDBC, 커넥션 풀](#v05---spring-data-jdbc-커넥션-풀)
 - [v0.6 - JPA, 영속성 컨텍스트](#v06---jpa-영속성-컨텍스트)
+- [v0.7 - 댓글, 연관관계, N+1 해결](#v07---댓글-연관관계-n1-해결)
 
 ## v0.1 - 순수 자바 콘솔 앱
 
@@ -147,3 +148,27 @@
 - 회원가입/게시글 작성/수정 API 정상 동작 확인
 - `save()` 호출 없이 DB에 UPDATE가 반영되는 것을 직접 확인해 더티 체킹의 동작 원리를 체감
 - JSON 바인딩용 DTO에 불필요하게 붙였던 `@Setter`, `@NoArgsConstructor`를 "실제로 필요한지" 하나씩 검증하며 제거 — 패턴을 무조건 따라 붙이지 않고 이유를 확인하는 습관 강화
+
+## v0.7 - 댓글, 연관관계, N+1 해결
+
+### 문제
+- Post와 Member가 `memberId`(단순 숫자)로만 연결돼 있어서, "이 게시글을 쓴 회원"을 객체로 바로 다룰 수 없었음
+- 게시글에 댓글을 다는 기능이 아예 없었음
+- 게시글 목록에 작성자 정보를 같이 보여주려 하니 조회 쿼리가 게시글 수만큼 추가로 발생함
+
+### 원인
+- `memberId: Long` 필드만 있으면 매번 `memberRepository.findById(memberId)`로 직접 조회해야 하고, JPA 연관관계 매핑(지연 로딩 등)을 전혀 못 씀
+- Comment 엔티티·API가 없었음
+- `@ManyToOne`은 기본 전략이 EAGER라 Post를 조회하는 순간 연관된 Member도 즉시 조회되는데, `findAll()`로 여러 Post를 한 번에 가져오면 각 Post마다 그 조회가 따로 실행돼서 1(Post 조회) + N(Member 조회)번 쿼리가 발생함
+
+### 해결
+- Post의 `memberId: Long` 필드를 `member: Member`로 바꾸고 `@ManyToOne` + `@JoinColumn(name = "member_id")`로 Post-Member 연관관계 매핑
+- `Comment` 엔티티(Member, Post 양쪽에 `@ManyToOne`)와 `POST /posts/{postId}/comments`, `PATCH /comments/{id}` 구현, 응답은 `CommentResponse` DTO로 분리
+- `spring.jpa.show-sql` + `format_sql`로 Hibernate가 실제 보내는 쿼리를 로그로 확인(게시글 5개, 작성자 3명 기준 1 + 3번 쿼리 발생 — 중복 작성자는 영속성 컨텍스트 1차 캐시 덕에 한 번만 조회됨도 확인)
+- `PostRepository`에 `@Query("SELECT p FROM Post p JOIN FETCH p.member")`로 `findAllWithMember()`를 추가해 Post와 Member를 한 번의 쿼리로 조회하도록 해결
+- CommentRequest는 생성/수정용을 분리하지 않고 그대로 뒀음 — Comment 수정은 본인 확인용으로 여전히 `memberId`가 필요해서 분리해도 모양이 같아지는 상황. v0.13에서 인증이 들어오면 재검토 예정
+
+### 결과
+- Post 목록/상세에서 작성자 정보를 연관관계로 바로 꺼내 쓸 수 있게 됨
+- 게시글에 댓글 작성/수정 가능, 본인 댓글만 수정되는 것 확인
+- Hibernate 로그 기준 게시글 목록 조회 쿼리가 1 + N번에서 1번으로 줄어든 것 확인

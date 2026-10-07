@@ -1,13 +1,12 @@
 package com.seongmo.community.post.controller;
 
 import com.seongmo.community.post.dto.PostCreateRequest;
+import com.seongmo.community.post.dto.PostPageResponse;
 import com.seongmo.community.post.dto.PostResponse;
 import com.seongmo.community.post.dto.PostUpdateRequest;
 import com.seongmo.community.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,8 +15,11 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public List<PostResponse> findAll() {
-        return postService.findAll();
+    public PostPageResponse findAll(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return postService.findAll(cursor, size);
     }
 
     @PostMapping

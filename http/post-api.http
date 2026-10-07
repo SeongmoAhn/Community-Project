@@ -47,11 +47,23 @@ Content-Type: application/json
   "content": "성모_1글 본문1 수정1"
 }
 
-### 게시글 전체 조회 (1번 글에 댓글 있는지 확인용)
+### 게시글 전체 조회 (처음 20개)
 GET http://localhost:8080/posts
+
+### 게시글 전체 조회 (다음 20개)
+GET http://localhost:8080/posts?size=100
+
+### 오류
+GET http://localhost:8080/posts?cursor=abd
+
+### 마지막 조회
+GET http://localhost:8080/posts?cursor=2024-11-09T16:13:54_1006381
 
 ### 댓글 있는 게시글 삭제 (1번 글 - comment-api.http에서 댓글 단 글)
 DELETE http://localhost:8080/posts/6
 
 ### 삭제 후 전체 조회 (실제로 뭐가 지워졌는지 확인)
 GET http://localhost:8080/posts
+
+###
+GET http://localhost:8080/posts?cursor=2024-11-09T16:31:54_1006363

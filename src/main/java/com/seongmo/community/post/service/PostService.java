@@ -5,15 +5,20 @@ import com.seongmo.community.member.Member;
 import com.seongmo.community.member.repository.MemberRepository;
 import com.seongmo.community.post.Post;
 import com.seongmo.community.post.dto.PostCreateRequest;
+import com.seongmo.community.post.dto.PostPageResponse;
 import com.seongmo.community.post.dto.PostResponse;
 import com.seongmo.community.post.dto.PostUpdateRequest;
+import com.seongmo.community.post.exception.InvalidCursorException;
 import com.seongmo.community.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -23,6 +28,9 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
+
+    private record PageStats(LocalDateTime createdAt, Long id) {}
+    private static final int MAX_SIZE = 50;
 
     public PostResponse create(PostCreateRequest request) {
         Member member = memberRepository.findById(request.getMemberId())
@@ -78,10 +86,38 @@ public class PostService {
                 .build();
     }
 
-    public List<PostResponse> findAll() {
-        List<Post> posts = postRepository.findAllWithMember();
+    // "createdAt_id" 형태로 반환
+    private String encodeCursor(Post post) {
+        return post.getCreatedAt().toString() + "_" + post.getId();
+    }
 
-        return posts.stream().map(post ->
+    // cursor를 {createdAt, id}로 디코딩 후 반환
+    private PageStats decodeCursor(String cursor) {
+        try {
+            String[] parts = cursor.split("_", 2);
+            return new PageStats(LocalDateTime.parse(parts[0]), Long.parseLong(parts[1]));
+        } catch (DateTimeParseException | NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            throw new InvalidCursorException("잘못된 cursor 형식입니다.");
+        }
+    }
+
+    public PostPageResponse findAll(String cursor, int size) {
+        int pageSize = Math.min(Math.max(size, 1), MAX_SIZE);
+        Pageable pageable = PageRequest.of(0, pageSize + 1);
+
+        List<Post> posts;
+        if (cursor == null || cursor.isBlank()) {
+            posts = postRepository.findFirstPage(pageable);
+        } else {
+            PageStats stats = decodeCursor(cursor);
+            posts = postRepository.findNextPage(stats.createdAt, stats.id, pageable);
+        }
+
+        boolean hasNext = posts.size() > pageSize;
+        List<Post> page = hasNext ? posts.subList(0, pageSize) : posts;
+        String nextCursor = hasNext ? encodeCursor(page.get(page.size() - 1)) : null;
+
+        List<PostResponse> items = page.stream().map(post ->
                 PostResponse.builder()
                         .id(post.getId())
                         .title(post.getTitle())
@@ -91,6 +127,8 @@ public class PostService {
                         .createdAt(post.getCreatedAt())
                         .updatedAt(post.getUpdatedAt())
                         .build()).toList();
+
+        return new PostPageResponse(items, nextCursor, hasNext);
     }
 
     @Transactional

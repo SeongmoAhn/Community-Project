@@ -9,6 +9,7 @@
 - [v0.6 - JPA, 영속성 컨텍스트](#v06---jpa-영속성-컨텍스트)
 - [v0.7 - 댓글, 연관관계, N+1 해결](#v07---댓글-연관관계-n1-해결)
 - [v0.8 - 트랜잭션](#v08---트랜잭션)
+- [v0.9 - 페이징, QueryDSL](#v09---페이징-querydsl)
 
 ## v0.1 - 순수 자바 콘솔 앱
 
@@ -195,3 +196,30 @@
 - 댓글이 달린 게시글도 FK 제약 위반 없이 정상 삭제됨
 - `@Transactional` 적용 전/후 DB 상태를 직접 비교해서 트랜잭션의 원자성("전부 성공 아니면 전부 실패")을 체감
 - SQL이 실행(flush)되는 시점과 커밋되는 시점이 다르다는 것, 그리고 롤백은 DB가 내부적으로 기록해둔 undo 정보로 되돌리는 것이라는 걸 로그로 확인
+
+## v0.9 - 페이징, QueryDSL
+
+### 문제
+- 게시글 목록 API가 전체를 한 번에 반환함. 게시글 1만 개일 때 응답 219ms / 1.68MB, 100만 개일 때 41.5초 / 173.88MB
+- 제목·작성자로 검색하려는데, 조건이 있을 수도 없을 수도 있어서 조합마다 쿼리 메서드가 필요해짐 (keyword, memberId 두 조건 × 첫 페이지/다음 페이지 = 8개, 조건이 하나 늘면 16개)
+
+### 원인
+- SQL은 1번이라 쿼리 횟수 문제가 아님. 서비스 메서드 자체가 약 35초 걸렸고, 100만 개 엔티티를 영속성 컨텍스트에 올리는 비용이 원인. `open-in-view`가 켜져 있어서 직렬화가 끝날 때까지 엔티티가 살아 있음
+- JPQL은 문자열이라 조건 조합을 `@Query` 하나로 표현할 수 없고, 문자열을 이어 붙이면 `AND`/공백 실수가 컴파일이 아니라 실행 시점에, 그것도 특정 조건 조합이 들어왔을 때만 터짐
+
+### 해결
+- 커서 기반 페이징: `GET /posts?cursor=...&size=20`, 정렬은 `created_at DESC, id DESC`
+- 응답은 `{ items, nextCursor, hasNext }` (`PostPageResponse`). `nextCursor`는 `createdAt_id` 형식이고, 마지막 `items`의 DB 값으로 만듦
+- `size + 1`개를 조회해서 초과분이 있으면 `hasNext=true`, 응답에서는 마지막 한 개를 버림
+- `size` 상한(50)은 서버에서 강제하고, 커서 파싱에 실패하면 `InvalidCursorException`을 던짐 (현재 500, v0.10 전역 예외 처리에서 400으로 매핑 예정)
+- 코드 리뷰에서 `decodeCursor`의 `catch (IllegalArgumentException)`이 `DateTimeParseException`, `ArrayIndexOutOfBoundsException`을 못 잡는다는 걸 확인해서 세 예외를 모두 잡도록 수정
+- QueryDSL 도입 (`io.github.openfeign.querydsl`, Boot 4 / Hibernate 7 호환을 위한 포크). `JPAQueryFactory` 빈 등록 후 `PostQueryRepository.findPage` 하나로 `keyword`, `memberId`, `cursor` 조건 처리
+- 각 조건 메서드는 조건이 없으면 `null`을 반환하고, `where()`가 `null`을 무시해서 조건이 있는 것만 `AND`로 붙음
+- 쿼리 클래스 위치는 `PostRepositoryCustom` + `Impl` 대신 별도 `PostQueryRepository`로 둠 (구조가 단순해서 먼저 이해하기 좋음)
+- 사용하지 않게 된 `findFirstPage`, `findNextPage`, `findAllWithMember` 삭제
+
+### 결과
+- 게시글 100만 개에서 첫 페이지 약 856ms / 3.28kB (이전 41.5초 / 173.88MB). 같은 요청이 2078ms로 나온 적도 있어서 1회 측정값의 편차가 큼
+- 정확히 `size`개만 남은 경계에서 `hasNext=false`, 마지막 페이지에서 `nextCursor=null`, `size=100000` 요청은 50개로 제한됨을 확인
+- 조건 조합별 쿼리 메서드 8개가 `findPage` 하나로 줄었고, 검색 조건 + 커서 조합 요청도 정상 동작
+- 남은 문제: `created_at`, `title`에 인덱스가 없어서 `EXPLAIN`이 `type=ALL`(풀 스캔)로 나옴. 20개만 가져와도 수백 ms ~ 2초가 걸리고, `LIKE '%키워드%'`는 인덱스를 못 탐. v1.2(실행 계획, 인덱스)에서 해결 예정

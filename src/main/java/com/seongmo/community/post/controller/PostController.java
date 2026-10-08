@@ -16,10 +16,12 @@ public class PostController {
 
     @GetMapping
     public PostPageResponse findAll(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long memberId,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return postService.findAll(cursor, size);
+        return postService.findAll(keyword, memberId, cursor, size);
     }
 
     @PostMapping

@@ -9,11 +9,10 @@ import com.seongmo.community.post.dto.PostPageResponse;
 import com.seongmo.community.post.dto.PostResponse;
 import com.seongmo.community.post.dto.PostUpdateRequest;
 import com.seongmo.community.post.exception.InvalidCursorException;
+import com.seongmo.community.post.repository.PostQueryRepository;
 import com.seongmo.community.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +25,7 @@ import java.util.List;
 @Slf4j
 public class PostService {
     private final PostRepository postRepository;
+    private final PostQueryRepository postQueryRepository;
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
 
@@ -101,17 +101,16 @@ public class PostService {
         }
     }
 
-    public PostPageResponse findAll(String cursor, int size) {
+    public PostPageResponse findAll(String keyword, Long memberId, String cursor, int size) {
         int pageSize = Math.min(Math.max(size, 1), MAX_SIZE);
-        Pageable pageable = PageRequest.of(0, pageSize + 1);
 
-        List<Post> posts;
-        if (cursor == null || cursor.isBlank()) {
-            posts = postRepository.findFirstPage(pageable);
-        } else {
-            PageStats stats = decodeCursor(cursor);
-            posts = postRepository.findNextPage(stats.createdAt, stats.id, pageable);
-        }
+        PageStats stats = (cursor == null || cursor.isBlank()) ? null : decodeCursor(cursor);
+        List<Post> posts = postQueryRepository.findPage(
+                keyword,
+                memberId,
+                stats == null ? null : stats.createdAt,
+                stats == null ? null : stats.id,
+                pageSize + 1);
 
         boolean hasNext = posts.size() > pageSize;
         List<Post> page = hasNext ? posts.subList(0, pageSize) : posts;

@@ -29,6 +29,11 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.aspectj:aspectjweaver'
+    implementation "io.github.openfeign.querydsl:querydsl-jpa:7.1"
+    // Q클래스 생성용
+    annotationProcessor "io.github.openfeign.querydsl:querydsl-apt:7.1:jpa"
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 }
 
 test {

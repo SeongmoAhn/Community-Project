@@ -1,0 +1,17 @@
+### 1. 조건 없음 (기존 동작과 같아야 함)
+GET http://localhost:8080/posts
+
+### 2. keyword만
+GET http://localhost:8080/posts?keyword=1000000
+
+### 3. memberId만
+GET http://localhost:8080/posts?memberId=4
+
+### 4. keyword + memberId
+GET http://localhost:8080/posts?keyword=99999&memberId=4
+
+### 5. 조건 + 커서 (memberId=4 첫 응답의 nextCursor를 붙여서)
+GET http://localhost:8080/posts?memberId=4&cursor=2026-10-04T23:02:12_225
+
+### 6. 결과 없는 검색
+GET http://localhost:8080/posts?keyword=없는제목
